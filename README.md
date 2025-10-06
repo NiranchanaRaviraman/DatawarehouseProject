@@ -4,6 +4,7 @@ This project demonstrates a comprehensive data warehousing solution — from bui
 Designed as a portfolio project, it highlights industry best practices in data engineering.
 
 🚀 Project Requirements
+
 🧱 Building the Data Warehouse
 📘 Objective
 
