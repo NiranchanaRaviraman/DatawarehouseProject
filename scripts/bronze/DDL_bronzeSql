@@ -1,29 +1,13 @@
-/*───────────────────────────────────────────────────────────────
-🏗️  DDL SCRIPT: Create Bronze Tables
-───────────────────────────────────────────────────────────────
-
-📌 PURPOSE:
-    This script defines the *Bronze Layer* table structures 
-    in the data warehouse.
-
-    It performs the following actions:
-      • Drops existing Bronze tables (if they exist)
-      • Recreates tables with the latest schema definitions
-      • Establishes a clean base for data ingestion
-
-🧩 LAYER CONTEXT:
-    Source Files  →  Bronze Tables  
-       (Raw CSVs)      (Staging / Landing Zone)
-
-⚙️ USAGE:
-    Run this script before executing the Bronze Load procedure  
-    to ensure the table structures are up to date.
-
-🚀 EXECUTION:
-    Simply run the script in SQL Server Management Studio (SSMS):
-        ▶️  Execute Entire Script
+/*
+===============================================================================
+DDL Script: Create Bronze Tables
+===============================================================================
+Script Purpose:
+    This script creates tables in the 'bronze' schema, dropping existing tables 
+    if they already exist.
+	  Run this script to re-define the DDL structure of 'bronze' Tables
+===============================================================================
 */
-
 
 IF OBJECT_ID('bronze.crm_cust_info', 'U') IS NOT NULL
     DROP TABLE bronze.crm_cust_info;
