@@ -1,191 +1,144 @@
-/*───────────────────────────────────────────────────────────────
- 🧱 STORED PROCEDURE: Load Bronze Layer  (Source → Bronze)
-───────────────────────────────────────────────────────────────
-
-📌 PURPOSE:
-    This stored procedure loads raw data from external CSV files 
-    into the *Bronze Layer* of the data warehouse.
-
+/*
+===============================================================================
+Stored Procedure: Load Bronze Layer (Source -> Bronze)
+===============================================================================
+Script Purpose:
+    This stored procedure loads data into the 'bronze' schema from external CSV files. 
     It performs the following actions:
-      • Truncates all Bronze tables before loading.
-      • Uses the BULK INSERT command to import CSV data efficiently.
-      • Includes basic data quality checks (NULLs & Duplicates).
+    - Truncates the bronze tables before loading data.
+    - Uses the `BULK INSERT` command to load data from csv Files to bronze tables.
 
-🧩 PROCESS FLOW:
-    Source Files  →  Bronze Tables
-       (CSV)             (SQL)
+Parameters:
+    None. 
+	  This stored procedure does not accept any parameters or return any values.
 
-⚙️ PARAMETERS:
-    • None
-      This procedure does not accept any parameters 
-      and does not return any values.
-
-🚀 USAGE EXAMPLE:
+Usage Example:
     EXEC bronze.load_bronze;
-
-───────────────────────────────────────────────────────────────
- Author   : Niranchana  
- Layer    : Bronze (Raw Ingestion)  
- Updated  : 2025-10-06  
-───────────────────────────────────────────────────────────────
+===============================================================================
 */
-
-
-CREATE OR ALTER PROCEDURE bronze.load_bronze
-AS
+CREATE OR ALTER PROCEDURE bronze.load_bronze AS
 BEGIN
-    DECLARE @start_time DATETIME, 
-            @end_time DATETIME,
-            @RowCount INT = 0,
-            @TotalRows INT = 0;
+	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME; 
+	BEGIN TRY
+		SET @batch_start_time = GETDATE();
+		PRINT '================================================';
+		PRINT 'Loading Bronze Layer';
+		PRINT '================================================';
 
-    SET NOCOUNT ON;
+		PRINT '------------------------------------------------';
+		PRINT 'Loading CRM Tables';
+		PRINT '------------------------------------------------';
 
-    PRINT '============================================';
-    PRINT 'Loading Bronze Layer';
-    PRINT '============================================';
+		SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: bronze.crm_cust_info';
+		TRUNCATE TABLE bronze.crm_cust_info;
+		PRINT '>> Inserting Data Into: bronze.crm_cust_info';
+		BULK INSERT bronze.crm_cust_info
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\cust_info.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-    BEGIN TRY
-        PRINT '----------------------------------------------';
-        PRINT 'Loading CRM Tables';
-        PRINT '----------------------------------------------';
-
-        --1
         SET @start_time = GETDATE();
-        PRINT '>> Truncating Table: BRONZE.CRM_CUST_INFO';
-        TRUNCATE TABLE BRONZE.CRM_CUST_INFO;
+		PRINT '>> Truncating Table: bronze.crm_prd_info';
+		TRUNCATE TABLE bronze.crm_prd_info;
 
-        PRINT '>> Inserting Data Into: BRONZE.CRM_CUST_INFO';
-        BULK INSERT BRONZE.CRM_CUST_INFO
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\cust_info.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
+		PRINT '>> Inserting Data Into: bronze.crm_prd_info';
+		BULK INSERT bronze.crm_prd_info
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\prd_info.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-        SELECT @RowCount = COUNT(*) FROM BRONZE.CRM_CUST_INFO;
-        SET @TotalRows += @RowCount;
-        PRINT '   Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
+        SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: bronze.crm_sales_details';
+		TRUNCATE TABLE bronze.crm_sales_details;
+		PRINT '>> Inserting Data Into: bronze.crm_sales_details';
+		BULK INSERT bronze.crm_sales_details
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\sales_details.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-		--2
-        SET @start_time = GETDATE(); 
-        PRINT '>> Truncating Table: BRONZE.CRM_prd_INFO';
-        TRUNCATE TABLE BRONZE.CRM_prd_INFO;
+		PRINT '------------------------------------------------';
+		PRINT 'Loading ERP Tables';
+		PRINT '------------------------------------------------';
+		
+		SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: bronze.erp_loc_a101';
+		TRUNCATE TABLE bronze.erp_loc_a101;
+		PRINT '>> Inserting Data Into: bronze.erp_loc_a101';
+		BULK INSERT bronze.erp_loc_a101
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\loc_a101.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-        PRINT '>> Inserting Data Into: BRONZE.CRM_prd_INFO';
-        BULK INSERT BRONZE.CRM_prd_INFO
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\prd_info.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
+		SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: bronze.erp_cust_az12';
+		TRUNCATE TABLE bronze.erp_cust_az12;
+		PRINT '>> Inserting Data Into: bronze.erp_cust_az12';
+		BULK INSERT bronze.erp_cust_az12
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\cust_az12.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-        SELECT @RowCount = COUNT(*) FROM BRONZE.CRM_prd_INFO;
-        SET @TotalRows += @RowCount;
-        PRINT 'Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
+		SET @start_time = GETDATE();
+		PRINT '>> Truncating Table: bronze.erp_px_cat_g1v2';
+		TRUNCATE TABLE bronze.erp_px_cat_g1v2;
+		PRINT '>> Inserting Data Into: bronze.erp_px_cat_g1v2';
+		BULK INSERT bronze.erp_px_cat_g1v2
+		FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\px_cat_g1v2.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '>> -------------';
 
-		--3
-        SET @start_time = GETDATE(); 
-        PRINT '>> Truncating Table: BRONZE.CRM_sales_details';
-        TRUNCATE TABLE BRONZE.CRM_sales_details;
-
-        PRINT '>> Inserting Data Into: BRONZE.CRM_sales_details';
-        BULK INSERT BRONZE.CRM_sales_details
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_crm\sales_details.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
-
-        SELECT @RowCount = COUNT(*) FROM BRONZE.CRM_sales_details;
-        SET @TotalRows += @RowCount;
-        PRINT '   Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
-
-
-        PRINT '----------------------------------------------';
-        PRINT 'Loading ERP Tables';
-        PRINT '----------------------------------------------';
-
-		--4
-        SET @start_time = GETDATE(); 
-        PRINT '>> Truncating Table: BRONZE.erp_loc_a101';
-        TRUNCATE TABLE BRONZE.erp_loc_a101;
-
-        PRINT '>> Inserting Data Into: BRONZE.erp_loc_a101';
-        BULK INSERT BRONZE.erp_loc_a101
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\loc_a101.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
-
-
-
-        SELECT @RowCount = COUNT(*) FROM BRONZE.erp_loc_a101;
-        SET @TotalRows += @RowCount;
-        PRINT 'Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
-
-		--5
-        SET @start_time = GETDATE(); 
-        PRINT '>> Truncating Table: BRONZE.erp_cust_az12';
-        TRUNCATE TABLE BRONZE.erp_cust_az12;
-
-        PRINT '>> Inserting Data Into: BRONZE.erp_cust_az12';
-        BULK INSERT BRONZE.erp_cust_az12
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\cust_az12.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
-
-        SELECT @RowCount = COUNT(*) FROM BRONZE.erp_cust_az12;
-        SET @TotalRows += @RowCount;
-        PRINT 'Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
-
-
-        --6
-		SET @start_time = GETDATE(); 
-        PRINT '>> Truncating Table: BRONZE.erp_px_cat_g1v2';
-        TRUNCATE TABLE BRONZE.erp_px_cat_g1v2;
-
-        PRINT '>> Inserting Data Into: BRONZE.erp_px_cat_g1v2';
-        BULK INSERT BRONZE.erp_px_cat_g1v2
-        FROM 'C:\Users\Niranchana\OneDrive\Desktop\warehouse\datasets\source_erp\px_cat_g1v2.csv'
-        WITH (FIRSTROW = 2, FIELDTERMINATOR = ',', TABLOCK);
-		set @end_time=getdate()
-		print '>>Load Duration: '+cast(datediff(second,@start_time,@end_time) as nvarchar)+ 'seconds';
-		print'>>---------------------'
+		SET @batch_end_time = GETDATE();
+		PRINT '=========================================='
+		PRINT 'Loading Bronze Layer is Completed';
+        PRINT '   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
+		PRINT '=========================================='
+	END TRY
+	BEGIN CATCH
+		PRINT '=========================================='
+		PRINT 'ERROR OCCURED DURING LOADING BRONZE LAYER'
+		PRINT 'Error Message' + ERROR_MESSAGE();
+		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
+		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);
+		PRINT '=========================================='
+	END CATCH
+END
 
 
-        SELECT @RowCount = COUNT(*) FROM BRONZE.erp_px_cat_g1v2;
-        SET @TotalRows += @RowCount;
-        PRINT 'Rows Loaded: ' + CAST(@RowCount AS VARCHAR(20));
-        PRINT '----------------------------------------------';
-
-
-        
-        PRINT '============================================';
-        PRINT 'Bronze Layer Load Completed Successfully!';
-        PRINT '============================================';
-        PRINT 'Total Rows Loaded in Bronze Layer: ' + CAST(@TotalRows AS VARCHAR(20));
-        PRINT '============================================';
-
-    END TRY
-
-    BEGIN CATCH
-        PRINT '----------------------------------------------';
-        PRINT ' ERROR OCCURRED WHILE LOADING BRONZE LAYER!';
-        PRINT '----------------------------------------------';
-        PRINT 'Error Message: ' + ERROR_MESSAGE();
-        PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR(10));
-        PRINT 'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10));
-        PRINT 'Error Procedure: ' + ISNULL(ERROR_PROCEDURE(), 'N/A');
-        THROW;
-    END CATCH;
-END; 
-GO
+--exec bronze.load_bronze
